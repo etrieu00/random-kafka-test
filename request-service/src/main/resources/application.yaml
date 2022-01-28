@@ -1,0 +1,13 @@
+server:
+  port: 8082
+kafka:
+  bootstrap:
+    servers: localhost:9092
+  one:
+    topic: one
+  two:
+    topic: two
+
+logging:
+  level:
+    ROOT: INFO

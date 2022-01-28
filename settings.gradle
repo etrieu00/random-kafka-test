@@ -1,0 +1,4 @@
+include 'processing-service'
+include 'request-service'
+include 'shared'
+rootProject.name = 'com.etrieu00'

@@ -1,0 +1,66 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "TWO:1:1,ONE:1:1"
+#    postgres:
+#      image: postgres:12.7
+#      container_name: postgres
+#      environment:
+#        - POSTGRES_USER=postgres
+#        - POSTGRES_PASSWORD=password
+#        - POSTGRES_DB=example
+#      ports:
+#        - 5432:5432
+#      volumes:
+#        - ./databases/postgres/example:/var/lib/postgresql/data
+#      restart: unless-stopped
+#    flyway:
+#      image: flyway/flyway:7.9
+#      container_name: flyway
+#      environment:
+#        - FLYWAY_USER=postgres
+#        - FLYWAY_PASSWORD=password
+#        - FLYWAY_URL=jdbc:postgresql://postgres:5432/example
+#        - FLYWAY_SCHEMAS=kafka_cqrs
+#        - FLYWAY_LOCATIONS=filesystem:/flyway/sql/
+#        - FLYWAY_CONNECT_RETRIES=60
+#        - FLYWAY_SQL_MIGRATION_PREFIX=V
+#        - FLYWAY_SQL_MIGRATION_SEPARATOR=__
+#        - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+#      command: migrate
+#      volumes:
+#        - ./migrations:/flyway/sql
+#      depends_on:
+#        - postgres
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    ports:
+      - 9000:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+      JVM_OPTS: -Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify
+    depends_on:
+      - kafka
