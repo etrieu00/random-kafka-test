@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderRecord;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Log4j2
@@ -45,10 +46,11 @@ public class ProcessingServiceApplication {
     subscription.getEventPublisher()
       .map(example -> new Example(example.getId(), "Hello " + example.getData()))
       .map(mapper::convertToString)
+      .delayElements(Duration.ofSeconds(1))
       .flatMap(processed -> kafkaSender.send(Mono.just(jsonToRecord(processed)))
-        .next()
-        .map(res -> res.exception() == null))
-      .subscribe();
+        .next())
+      .map(res -> res.exception() == null ? "message sent!" : "message failed to send!")
+      .subscribe(System.out::println);
   }
 
   private SenderRecord<String, String, String> jsonToRecord(String json) {

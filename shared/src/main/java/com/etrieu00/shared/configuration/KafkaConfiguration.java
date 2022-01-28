@@ -51,7 +51,7 @@ public class KafkaConfiguration {
     );
   }
 
-  @Bean("sender-one")
+  @Bean
   public KafkaSender<String, String> kafkaSender() {
     return new DefaultKafkaSender<>(ProducerFactory.INSTANCE,
       SenderOptions.create(configPropsSender));

@@ -6,7 +6,6 @@ import com.etrieu00.shared.service.KafkaSubscription;
 import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +32,7 @@ public class ExampleController {
   @Autowired
   public ExampleController(JsonMapper mapper,
                            KafkaSubscription kafkaSubscription,
-                           @Qualifier("sender-one") KafkaSender<String, String> kafkaSender) {
+                           KafkaSender<String, String> kafkaSender) {
     this.mapper = mapper;
     this.kafkaSubscription = kafkaSubscription;
     this.kafkaSender = kafkaSender;
@@ -48,14 +47,15 @@ public class ExampleController {
       .delayElements(Duration.ofSeconds(1))
       .flatMap(message -> kafkaSender.send(Mono.just(jsonToRecord(message)))
         .next()
-        .map(res -> res.exception() == null))
-      .subscribe();
+        .map(res -> res.exception() == null ? "message sent!" : "message failed to send!"))
+      .subscribe(System.out::println);
     Flux<Example> heartbeat = Flux.interval(Duration.ofSeconds(15))
       .take(10)
       .map(val -> new Example(transaction, "HEARTBEAT"));
     return kafkaSubscription
       .getEventPublisherOther()
       .filter(Objects::nonNull)
+      .filter(example -> example.getId().equals(transaction))
       .mergeWith(heartbeat);
   }
 
